@@ -19,10 +19,7 @@ fn main() {
     io::stdin().read_line(&mut strip_subdomain_str)
         .expect("Failed to read input");
 
-    let strip_subdomain = match strip_subdomain_str.trim().to_lowercase().as_str() {
-        "y" | "yes" => true,
-        _ => false,
-    };
+    let strip_subdomain = matches!(strip_subdomain_str.trim().to_lowercase().as_str(), "y" | "yes");
 
     let mut master_password = String::new();
     while master_password.trim().is_empty() {
@@ -53,12 +50,12 @@ fn main() {
 
 fn generate_password(url: &str, master_password: &str, strip_subdomain: &bool) -> String {
     // Placeholder for password generation logic
-    match(url_helper::parse_url(url, *strip_subdomain)) {
+    match url_helper::parse_url(url, *strip_subdomain)  {
         Ok(host) => {
             print!("Host is: {}", host);
         },
-        Err(e)=>{
-            print!("Host was invalid. Instead using an empty host: {}", "");
+        Err(_e)=>{
+            print!("Host was invalid. Instead using an empty host: ");
         }
     }
     format!("{}:{}", url.trim(), master_password.trim())

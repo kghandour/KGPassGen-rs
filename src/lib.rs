@@ -1,4 +1,3 @@
-use url::Url;
 
 pub mod url_helper {
     pub fn parse_url(url: &str, strip_subdomain: bool) -> Result<String, url::ParseError> {
