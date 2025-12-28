@@ -13,8 +13,14 @@ fn main() {
     io::stdin().read_line(&mut url)
         .expect("Failed to read input");
 
-    let master_password = rpassword::prompt_password("Enter master password:\n").unwrap();
-
+    let mut master_password = String::new();
+    while master_password.trim().is_empty() {
+        master_password = rpassword::prompt_password("Enter master password:\n").unwrap();
+        if master_password.trim().is_empty() {
+            println!("Master password cannot be empty. Please try again.");
+        }
+    }
+    
     let generated_password = generate_password(&url, &master_password);
     clipboard.set_text(&generated_password).unwrap();
     println!("Generated password copied to clipboard!");
@@ -28,6 +34,9 @@ fn main() {
     } else {
         println!("Password not displayed.")
     }
+
+    println!("Press Enter to exit...");
+    io::stdin().read_line(&mut String::new()).unwrap();
 
 }
 

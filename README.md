@@ -7,6 +7,6 @@ For the CLI implementation, by default, the password input is hidden from the te
 
 ## FAQ
 1. If you are on Wayland and copying to clipboard does not work
-- This app uses `arboard` to manage the clipboard ([Here](https://github.com/1Password/arboard)). If there is a problem, it is recommended to use Xwayland instead. If the problem persists or you are facing it in other operating systems, please create an issue. 
+This app uses `arboard` to manage the clipboard ([Here](https://github.com/1Password/arboard)). If there is a problem, it is recommended to use Xwayland instead. If the problem persists or you are facing it in other operating systems, please create an issue. 
 
-- An alternative solution that is currently WIP
+An alternative solution is when prompted, you can show the generated password to the terminal.
