@@ -1,5 +1,6 @@
 use std::io;
 use arboard::Clipboard;
+use kg_passgen::url_helper;
 
 fn main() {
     let mut clipboard = Clipboard::new().unwrap();
@@ -13,6 +14,16 @@ fn main() {
     io::stdin().read_line(&mut url)
         .expect("Failed to read input");
 
+    let mut strip_subdomain_str = String::new();
+    println!("Do you want to strip subdomains? (y/n) [Default: n]:");
+    io::stdin().read_line(&mut strip_subdomain_str)
+        .expect("Failed to read input");
+
+    let strip_subdomain = match strip_subdomain_str.trim().to_lowercase().as_str() {
+        "y" | "yes" => true,
+        _ => false,
+    };
+
     let mut master_password = String::new();
     while master_password.trim().is_empty() {
         master_password = rpassword::prompt_password("Enter master password:\n").unwrap();
@@ -20,8 +31,8 @@ fn main() {
             println!("Master password cannot be empty. Please try again.");
         }
     }
-    
-    let generated_password = generate_password(&url, &master_password);
+
+    let generated_password = generate_password(&url, &master_password, &strip_subdomain);
     clipboard.set_text(&generated_password).unwrap();
     println!("Generated password copied to clipboard!");
 
@@ -40,7 +51,15 @@ fn main() {
 
 }
 
-fn generate_password(url: &str, master_password: &str) -> String {
+fn generate_password(url: &str, master_password: &str, strip_subdomain: &bool) -> String {
     // Placeholder for password generation logic
+    match(url_helper::parse_url(url, *strip_subdomain)) {
+        Ok(host) => {
+            print!("Host is: {}", host);
+        },
+        Err(e)=>{
+            print!("Host was invalid. Instead using an empty host: {}", "");
+        }
+    }
     format!("{}:{}", url.trim(), master_password.trim())
 }
