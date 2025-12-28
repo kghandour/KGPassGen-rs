@@ -1,6 +1,5 @@
 use std::io;
 use arboard::Clipboard;
-use kg_passgen::url_helper;
 
 fn main() {
     let mut clipboard = Clipboard::new().unwrap();
@@ -29,7 +28,7 @@ fn main() {
         }
     }
 
-    let generated_password = generate_password(&url, &master_password, &strip_subdomain);
+    let generated_password = kg_passgen::generate_password(&url, &master_password, &strip_subdomain);
     clipboard.set_text(&generated_password).unwrap();
     println!("Generated password copied to clipboard!");
 
@@ -46,17 +45,4 @@ fn main() {
     println!("Press Enter to exit...");
     io::stdin().read_line(&mut String::new()).unwrap();
 
-}
-
-fn generate_password(url: &str, master_password: &str, strip_subdomain: &bool) -> String {
-    // Placeholder for password generation logic
-    match url_helper::parse_url(url, *strip_subdomain)  {
-        Ok(host) => {
-            print!("Host is: {}", host);
-        },
-        Err(_e)=>{
-            print!("Host was invalid. Instead using an empty host: ");
-        }
-    }
-    format!("{}:{}", url.trim(), master_password.trim())
 }
