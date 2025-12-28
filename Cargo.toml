@@ -5,3 +5,4 @@ edition = "2024"
 
 [dependencies]
 rpassword = "7.4"
+arboard = "3.6.1"
