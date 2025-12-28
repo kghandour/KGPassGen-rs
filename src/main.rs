@@ -42,5 +42,5 @@ fn main() {
 
 fn generate_password(url: &str, master_password: &str) -> String {
     // Placeholder for password generation logic
-    return format!("{}:{}", url.trim(), master_password.trim())
+    format!("{}:{}", url.trim(), master_password.trim())
 }
