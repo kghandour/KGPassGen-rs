@@ -22,6 +22,8 @@ pub mod url_helper {
     }
 }
 
+// TODO: Add Config enum with default values
+// TODO: Add pattern matching to call different algorithms
 pub fn generate_password(url: &str, master_password: &str, strip_subdomain: &bool) -> String {
     // Placeholder for password generation logic
     let host =  crate::url_helper::get_host(url, *strip_subdomain);

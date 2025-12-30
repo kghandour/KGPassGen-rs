@@ -1,6 +1,7 @@
 use std::io;
 use arboard::Clipboard;
 
+// TODO: Add argparsing for CLI implementation
 fn main() {
     let mut clipboard = Clipboard::new().unwrap();
 
