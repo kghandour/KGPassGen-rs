@@ -20,12 +20,12 @@ fn main() {
     io::stdin().read_line(&mut url)
         .expect("Failed to read input");
 
-    let mut strip_subdomain_str = String::new();
-    println!("Do you want to strip subdomains? (y/n) [Default: n]:");
-    io::stdin().read_line(&mut strip_subdomain_str)
-        .expect("Failed to read input");
+    // let mut strip_subdomain_str = String::new();
+    // println!("Do you want to strip subdomains? (y/n) [Default: n]:");
+    // io::stdin().read_line(&mut strip_subdomain_str)
+    //     .expect("Failed to read input");
 
-    let strip_subdomain = matches!(strip_subdomain_str.trim().to_lowercase().as_str(), "y" | "yes");
+    // let strip_subdomain = matches!(strip_subdomain_str.trim().to_lowercase().as_str(), "y" | "yes");
 
     let mut master_password = String::new();
     while master_password.trim().is_empty() {
@@ -41,7 +41,21 @@ fn main() {
         }
     }
 
-    let generated_password = kg_passgen::generate_password(&url, &master_password, &strip_subdomain);
+    println!("Please pick a configuration for the password generator:");
+    println!("1) KGPG (Default): {:?}", kg_passgen::generator::Config::KGPG);
+    println!("2) SGP: {:?}", kg_passgen::generator::Config::SGP);
+    println!("Enter choice (1 or 2) [Default: 1]:");
+    let mut config_choice = String::new();
+    io::stdin().read_line(&mut config_choice).expect("Failed to read input");
+
+    let config = match config_choice.trim() {
+        "2" => kg_passgen::generator::Config::SGP,
+        _ => kg_passgen::generator::Config::KGPG,
+    };
+
+    println!("Current configuration is: {:?}", config);
+
+    let generated_password = kg_passgen::generator::generate_password(&url, &master_password, &config);
     match clipboard.set_text(generated_password.clone()) {
         Ok(_) => {
             println!("Generated password copied to clipboard!");

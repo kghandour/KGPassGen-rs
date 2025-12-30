@@ -309,6 +309,7 @@ name = "kg_passgen"
 version = "0.1.0"
 dependencies = [
  "arboard",
+ "psl",
  "rpassword",
  "url",
 ]
@@ -507,6 +508,21 @@ checksum = "9695f8df41bb4f3d222c95a67532365f569318332d03d5f3f67f37b20e6ebdf0"
 dependencies = [
  "unicode-ident",
 ]
+
+[[package]]
+name = "psl"
+version = "2.1.175"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a1fb740c4ef76c2187ae4a56a74d58595bb8258e973704f5d60545f3e1d3e69a"
+dependencies = [
+ "psl-types",
+]
+
+[[package]]
+name = "psl-types"
+version = "2.0.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "33cb294fe86a74cbcf50d4445b37da762029549ebeea341421c7c70370f86cac"
 
 [[package]]
 name = "pxfm"
