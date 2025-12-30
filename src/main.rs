@@ -3,7 +3,13 @@ use arboard::Clipboard;
 
 // TODO: Add argparsing for CLI implementation
 fn main() {
-    let mut clipboard = Clipboard::new().unwrap();
+    let mut clipboard = match Clipboard::new() {
+        Ok(clipboard) => clipboard,
+        Err(e) => {
+            println!("Warning: Clipboard unavailable; generated password will not be copied. ({})", e);
+            return;
+        }
+    };
 
     println!("===== KG Password Generator =====");
     println!("Enter the service url you want to generate a password for");
@@ -23,15 +29,27 @@ fn main() {
 
     let mut master_password = String::new();
     while master_password.trim().is_empty() {
-        master_password = rpassword::prompt_password("Enter master password:\n").unwrap();
+        master_password = match rpassword::prompt_password("Enter master password:\n") {
+            Ok(pw) => pw,
+            Err(_) => {
+                println!("Failed to read master password. Please try again.");
+                continue;
+            }
+        };
         if master_password.trim().is_empty() {
             println!("Master password cannot be empty. Please try again.");
         }
     }
 
     let generated_password = kg_passgen::generate_password(&url, &master_password, &strip_subdomain);
-    clipboard.set_text(&generated_password).unwrap();
-    println!("Generated password copied to clipboard!");
+    match clipboard.set_text(generated_password.clone()) {
+        Ok(_) => {
+            println!("Generated password copied to clipboard!");
+        },
+        Err(e) => {
+            println!("Failed to copy to clipboard: {}.", e);
+        }
+    }
 
     println!("Do you want to see the generated password? (y/n) [Default: n]:");
     let mut show_password = String::new();
@@ -44,6 +62,6 @@ fn main() {
     }
 
     println!("Press Enter to exit...");
-    io::stdin().read_line(&mut String::new()).unwrap();
+    io::stdin().read_line(&mut String::new()).expect("Failed to detect input. Exiting");
 
 }
