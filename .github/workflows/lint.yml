@@ -2,15 +2,7 @@
 
 name: lint rust
 
-on:
-  push:
-    branches:
-      - dev
-  pull_request:
-    paths:
-      - '.github/workflows/lint-rust.yml'
-      - 'crates/**'
-
+on: push
 env:
   RUST_BACKTRACE: 1
   CARGO_PROFILE_DEV_DEBUG: 0 # This would add unnecessary bloat to the target folder, decreasing cache efficiency.
@@ -30,11 +22,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           components: clippy
-
-      - name: install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libgtk-3-dev webkit2gtk-4.1 libayatana-appindicator3-dev
 
       - uses: Swatinem/rust-cache@v2
 
