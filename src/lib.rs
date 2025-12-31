@@ -23,6 +23,8 @@ pub mod url_helper {
 // TODO: Add Config enum with default values
 // TODO: Add pattern matching to call different algorithms
 pub mod generator {
+    use base64::Engine;
+
     #[derive(Debug)]
     pub enum HashAlgorithm {
         MD5,
@@ -60,7 +62,7 @@ pub mod generator {
         pub const KGPG: Config = Config {
             generator_type: GeneratorType::KGPG,
             strip_subdomain: true,
-            hash_algorithm: HashAlgorithm::MD5,
+            hash_algorithm: HashAlgorithm::SHA512,
             length: 15,
             hops: 15,
         };
@@ -68,7 +70,7 @@ pub mod generator {
         pub const SGP: Config = Config {
             generator_type: GeneratorType::SGP,
             strip_subdomain: true,
-            hash_algorithm: HashAlgorithm::MD5,
+            hash_algorithm: HashAlgorithm::SHA512,
             length: 10,
             hops: 10,
         };
@@ -80,7 +82,8 @@ pub mod generator {
     }
 
     pub fn hash_md5(input: &str) -> String {
-        format!("{:x}", md5::compute(input.as_bytes()))
+        let digest = md5::compute(input.as_bytes());
+        base64::prelude::BASE64_STANDARD.encode(digest.0)
     }
 
     pub fn hash_sha512(input: &str) -> String {
@@ -89,7 +92,7 @@ pub mod generator {
         let mut hasher = Sha512::new();
         hasher.update(input.as_bytes());
         let result = hasher.finalize();
-        format!("{:x}", result)
+        base64::prelude::BASE64_STANDARD.encode(result)
     }
 
     pub fn validate_password(password: &str, config: &Config) -> bool {
@@ -104,8 +107,8 @@ pub mod generator {
         }
 
         if config.generator_type == GeneratorType::KGPG {
-            let special_char_regex = fancy_regex::Regex::new(r"[^!#%@$&]").unwrap();
-            if special_char_regex.is_match(sliced_password).unwrap() {
+            let special_char_regex = fancy_regex::Regex::new(r"[!#%@$&]").unwrap();
+            if !special_char_regex.is_match(sliced_password).unwrap() {
                 return false;
             }
         }
@@ -146,7 +149,6 @@ pub mod generator {
         let mut hopped_password = password.to_string();
         let mut iteration = 0;
         while iteration < config.hops {
-            println!("Hop number: {}", iteration);
             hopped_password = match config.hash_algorithm {
                 HashAlgorithm::MD5 => hash_md5(&hopped_password),
                 HashAlgorithm::SHA512 => hash_sha512(&hopped_password),
@@ -157,10 +159,7 @@ pub mod generator {
                 GeneratorType::SGP => apply_sgp(&hopped_password),
             };
 
-            println!("Hopped password: {}", hopped_password);
-
             if iteration == config.hops - 1 && !validate_password(&hopped_password, config) {
-                println!("Reached loop {} and password validation is {}", iteration, validate_password(&hopped_password, config));
                 iteration -= 1;
             }
             iteration += 1;
@@ -179,7 +178,7 @@ pub mod generator {
         // Placeholder for password generation logic
         let host =  crate::url_helper::get_host(url, &config.strip_subdomain);
 
-        let concat =format!("{}:{}", host.trim(), master_password.trim());
+        let concat =format!("{}:{}", master_password.trim(), host.trim());
         apply_password_hops(&concat, config)
     }
 }
