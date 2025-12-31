@@ -1,8 +1,9 @@
 use std::io;
 use arboard::Clipboard;
+use inquire::{Confirm, CustomType, Password, Select, Text, required};
 
-// TODO: Add argparsing for CLI implementation
 fn main() {
+    println!("KG Password Generator");
     let mut clipboard = match Clipboard::new() {
         Ok(clipboard) => clipboard,
         Err(e) => {
@@ -11,46 +12,76 @@ fn main() {
         }
     };
 
-    println!("===== KG Password Generator =====");
-    println!("Enter the service url you want to generate a password for");
-    println!("Service URL:");
-    
-    let mut url = String::new();
-
-    io::stdin().read_line(&mut url)
+    let url = Text::new("Service URL:")
+        .with_placeholder("e.g., https://example.com")
+        .with_help_message("The website or service you are trying to generate a password for")
+        .prompt()
         .expect("Failed to read input");
 
-    // let mut strip_subdomain_str = String::new();
-    // println!("Do you want to strip subdomains? (y/n) [Default: n]:");
-    // io::stdin().read_line(&mut strip_subdomain_str)
-    //     .expect("Failed to read input");
 
-    // let strip_subdomain = matches!(strip_subdomain_str.trim().to_lowercase().as_str(), "y" | "yes");
+    let master_password = Password::new("Master Password:")
+        .with_help_message("Your master password used to derive service passwords")
+        .with_display_mode(inquire::PasswordDisplayMode::Masked)
+        .with_validator(required!("A master password is required"))
+        .without_confirmation()
+        .prompt()
+        .expect("Failed to read input");
 
-    let mut master_password = String::new();
-    while master_password.trim().is_empty() {
-        master_password = match rpassword::prompt_password("Enter master password:\n") {
-            Ok(pw) => pw,
-            Err(_) => {
-                println!("Failed to read master password. Please try again.");
-                continue;
+    let kg_config = format!("KGPG {:?}", kg_passgen::config::Config::KGPG);
+    let sgp_config = format!("SGP {:?}", kg_passgen::config::Config::SGP);
+    let select_config = Select::new("Select Configuration", vec![&kg_config, &sgp_config, "Custom"])
+        .with_help_message("Choose the password generation configuration")
+        .prompt();
+
+    let config = match select_config {
+        Ok(choice) => {
+            if choice == kg_config {
+                kg_passgen::config::Config::KGPG
+            } else if choice == sgp_config {
+                kg_passgen::config::Config::SGP
+            } else {
+                let strip_domain = Confirm::new("Strip Subdomain?")
+                    .with_help_message("Whether to remove subdomains from the URL host")
+                    .with_default(true)
+                    .prompt()
+                    .expect("Failed to read input");
+
+                let hash_algorithm_select = Select::new("Select Hash Algorithm", vec!["MD5", "SHA512"])
+                    .with_help_message("Choose the hashing algorithm for password generation")
+                    .prompt()
+                    .expect("Failed to read input");
+
+                let hash_algorithm = match hash_algorithm_select {
+                    "MD5" => kg_passgen::config::HashAlgorithm::MD5,
+                    "SHA512" => kg_passgen::config::HashAlgorithm::SHA512,
+                    _ => kg_passgen::config::HashAlgorithm::SHA512,
+                };
+
+                let length: u8 = CustomType::<u8>::new("Password Length:")
+                    .with_help_message("Desired length of the generated password")
+                    .with_error_message("Please enter a valid number")
+                    .with_placeholder("e.g., 15")
+                    .prompt()
+                    .expect("Failed to read input");
+
+                let hops: u8 =  CustomType::<u8>::new("Number of Hops:")
+                    .with_help_message("Number of hashing iterations to apply")
+                    .with_error_message("Please enter a valid number")
+                    .with_placeholder("e.g., 15")
+                    .prompt()
+                    .expect("Failed to read input");
+
+                kg_passgen::config::Config::default()
+                    .with_hash_algorithm(hash_algorithm)
+                    .with_length(length)
+                    .with_hops(hops)
+                    .with_strip_subdomain(strip_domain)
             }
-        };
-        if master_password.trim().is_empty() {
-            println!("Master password cannot be empty. Please try again.");
+        },
+        Err(_) => {
+            println!("Error selecting configuration, defaulting to KGPG.");
+            kg_passgen::config::Config::KGPG
         }
-    }
-
-    println!("Please pick a configuration for the password generator:");
-    println!("1) KGPG (Default): {:?}", kg_passgen::config::Config::KGPG);
-    println!("2) SGP: {:?}", kg_passgen::config::Config::SGP);
-    println!("Enter choice (1 or 2) [Default: 1]:");
-    let mut config_choice = String::new();
-    io::stdin().read_line(&mut config_choice).expect("Failed to read input");
-
-    let config = match config_choice.trim() {
-        "2" => kg_passgen::config::Config::SGP,
-        _ => kg_passgen::config::Config::KGPG,
     };
 
     println!("Current configuration is: {:?}", config);
@@ -65,17 +96,18 @@ fn main() {
         }
     }
 
-    println!("Do you want to see the generated password? (y/n) [Default: n]:");
-    let mut show_password = String::new();
-    io::stdin().read_line(&mut show_password)
+    let show_password = Confirm::new("Show generated password?")
+        .with_help_message("Choose whether to display the generated password in the console")
+        .with_default(false)
+        .prompt()
         .expect("Failed to read input");
-    if show_password.trim().to_lowercase() == "y" || show_password.trim().to_lowercase() == "yes" {
-        println!("Generated password: {}", generated_password.trim());
+
+    if show_password {
+        println!("Generated password: \n{}", generated_password.trim());
     } else {
         println!("Password not displayed.")
     }
 
     println!("Press Enter to exit...");
     io::stdin().read_line(&mut String::new()).expect("Failed to detect input. Exiting");
-
 }
