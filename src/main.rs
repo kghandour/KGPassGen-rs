@@ -42,15 +42,15 @@ fn main() {
     }
 
     println!("Please pick a configuration for the password generator:");
-    println!("1) KGPG (Default): {:?}", kg_passgen::generator::Config::KGPG);
-    println!("2) SGP: {:?}", kg_passgen::generator::Config::SGP);
+    println!("1) KGPG (Default): {:?}", kg_passgen::config::Config::KGPG);
+    println!("2) SGP: {:?}", kg_passgen::config::Config::SGP);
     println!("Enter choice (1 or 2) [Default: 1]:");
     let mut config_choice = String::new();
     io::stdin().read_line(&mut config_choice).expect("Failed to read input");
 
     let config = match config_choice.trim() {
-        "2" => kg_passgen::generator::Config::SGP,
-        _ => kg_passgen::generator::Config::KGPG,
+        "2" => kg_passgen::config::Config::SGP,
+        _ => kg_passgen::config::Config::KGPG,
     };
 
     println!("Current configuration is: {:?}", config);

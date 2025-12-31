@@ -1,0 +1,106 @@
+use base64::Engine;
+use crate::config::{Config, HashAlgorithm, GeneratorType};
+
+pub fn hash_md5(input: &str) -> String {
+    let digest = md5::compute(input.as_bytes());
+    base64::prelude::BASE64_STANDARD.encode(digest.0)
+}
+
+pub fn hash_sha512(input: &str) -> String {
+    use sha2::{Sha512, Digest};
+
+    let mut hasher = Sha512::new();
+    hasher.update(input.as_bytes());
+    let result = hasher.finalize();
+    base64::prelude::BASE64_STANDARD.encode(result)
+}
+
+pub fn validate_password(password: &str, config: &Config) -> bool {
+    let sliced_password = match password.get(0..config.length as usize) {
+        Some(slice) => slice,
+        None => return false,
+    };
+
+    let password_regex = fancy_regex::Regex::new(r"(?=.*^[a-z])(?=.*[A-Z])(?=.*[0-9])([a-zA-Z0-9#?!@$%^&*]){8,}$").unwrap();
+    if !password_regex.is_match(sliced_password).unwrap() {
+        return false;
+    }
+
+    if config.generator_type == GeneratorType::KGPG {
+        let special_char_regex = fancy_regex::Regex::new(r"[!#%@$&]").unwrap();
+        if !special_char_regex.is_match(sliced_password).unwrap() {
+            return false;
+        }
+    }
+
+    true
+}
+
+pub fn apply_kgpg (password: &str) -> String {
+    let mut kgpg_password = String::new();
+    for c in password.chars() {
+        match c {
+            '+' => kgpg_password.push('!'),
+            '/' => kgpg_password.push('#'),
+            '=' => kgpg_password.push('%'),
+            '0' => kgpg_password.push('@'),
+            '8' => kgpg_password.push('$'),
+            '9' => kgpg_password.push('&'),
+            _ => kgpg_password.push(c),
+        }
+    }
+    kgpg_password
+}
+
+pub fn apply_sgp (password: &str) -> String {
+    let mut sgp_password = String::new();
+    for c in password.chars() {
+        match c {
+            '+' => sgp_password.push('9'),
+            '/' => sgp_password.push('8'),
+            '=' => sgp_password.push('A'),
+            _ => sgp_password.push(c),
+        }
+    }
+    sgp_password
+}
+
+pub fn apply_password_hops (password: &str, config: &Config) -> String {
+    let mut hopped_password = password.to_string();
+    let mut iteration = 0;
+    while iteration < config.hops {
+        hopped_password = match config.hash_algorithm {
+            HashAlgorithm::MD5 => hash_md5(&hopped_password),
+            HashAlgorithm::SHA512 => hash_sha512(&hopped_password),
+        };
+
+        hopped_password = match config.generator_type {
+            GeneratorType::KGPG => apply_kgpg(&hopped_password),
+            GeneratorType::SGP => apply_sgp(&hopped_password),
+        };
+
+        if iteration == config.hops - 1 && !validate_password(&hopped_password, config) {
+            iteration -= 1;
+        }
+        iteration += 1;
+    }
+
+
+    let sliced_password = match hopped_password.get(0..config.length as usize) {
+        Some(slice) => slice,
+        None => return hopped_password,
+    };
+
+    sliced_password.to_string()
+}
+
+pub fn generate_password(url: &str, master_password: &str, config: &Config) -> String {
+    // Placeholder for password generation logic
+    let host =  crate::url_helper::get_host(url, &config.strip_subdomain);
+
+    let concat =format!("{}:{}", master_password.trim(), host.trim());
+    apply_password_hops(&concat, config)
+}
+
+#[cfg(test)]
+mod tests;
