@@ -52,6 +52,7 @@ impl Config {
     pub fn with_hash_algorithm(mut self, algorithm: HashAlgorithm) -> Self { self.hash_algorithm = algorithm ; self }
     pub fn with_length(mut self, length: u8) -> Self { self.length = length ; self }
     pub fn with_hops(mut self, hops: u8) -> Self { self.hops = hops ; self }
+    pub fn with_generator_type(mut self, generator_type: GeneratorType) -> Self { self.generator_type = generator_type ; self }
 }
 
 #[cfg(test)]
@@ -62,7 +63,7 @@ mod tests {
     fn test_default_config() {
         let config = Config::default();
         assert_eq!(config.generator_type, GeneratorType::KGPG);
-        assert_eq!(config.strip_subdomain, true);
+        assert!(config.strip_subdomain);
         assert_eq!(config.hash_algorithm, HashAlgorithm::MD5);
         assert_eq!(config.length, 15);
         assert_eq!(config.hops, 15);
@@ -72,7 +73,7 @@ mod tests {
     fn test_kgpg_config() {
         let config = Config::KGPG;
         assert_eq!(config.generator_type, GeneratorType::KGPG);
-        assert_eq!(config.strip_subdomain, true);
+        assert!(config.strip_subdomain);
         assert_eq!(config.hash_algorithm, HashAlgorithm::SHA512);
         assert_eq!(config.length, 15);
         assert_eq!(config.hops, 15);
@@ -82,7 +83,7 @@ mod tests {
     fn test_sgp_config() {
         let config = Config::SGP;
         assert_eq!(config.generator_type, GeneratorType::SGP);
-        assert_eq!(config.strip_subdomain, true);
+        assert!(config.strip_subdomain);
         assert_eq!(config.hash_algorithm, HashAlgorithm::SHA512);
         assert_eq!(config.length, 10);
         assert_eq!(config.hops, 10);
@@ -94,9 +95,11 @@ mod tests {
             .with_strip_subdomain(false)
             .with_hash_algorithm(HashAlgorithm::SHA512)
             .with_length(20)
-            .with_hops(5);
+            .with_hops(5)
+            .with_generator_type(GeneratorType::KGPG);
 
-        assert_eq!(config.strip_subdomain, false);
+        assert_eq!(config.generator_type, GeneratorType::KGPG);
+        assert!(!config.strip_subdomain);
         assert_eq!(config.hash_algorithm, HashAlgorithm::SHA512);
         assert_eq!(config.length, 20);
         assert_eq!(config.hops, 5);

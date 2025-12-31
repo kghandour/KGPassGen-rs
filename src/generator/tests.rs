@@ -20,9 +20,9 @@ fn test_apply_sgp_replacements() {
 
 #[test]
 fn test_validate_password_basic_success_and_failure() {
-    let mut config = Config::default();
-    config.length = 8;
-    config.generator_type = GeneratorType::SGP;
+    let mut config = Config::default()
+        .with_length(8)
+        .with_generator_type(GeneratorType::SGP);
 
     // valid: has lowercase, uppercase and digit, 8 chars
     assert!(validate_password("aA1aaaaa", &config));
@@ -34,9 +34,9 @@ fn test_validate_password_basic_success_and_failure() {
 
 #[test]
 fn test_validate_password_kgpg_requires_special_char() {
-    let mut config = Config::default();
-    config.length = 9;
-    config.generator_type = GeneratorType::KGPG;
+    let config = Config::default()
+        .with_length(9)
+        .with_generator_type(GeneratorType::KGPG);
 
     // has required special char '!'
     assert!(validate_password("aA1aaaaa!", &config));
@@ -47,9 +47,10 @@ fn test_validate_password_kgpg_requires_special_char() {
 
 #[test]
 fn test_apply_password_hops_zero_hops_returns_input_unmodified() {
-    let mut config = Config::default();
-    config.hops = 0;
-    config.length = 100; // larger than input so slicing will return None and original returned
+    let config = Config::default()
+        .with_hops(0)
+        .with_length(100); // larger than input so slicing will return None and original returned
+
     let input = "short";
     let out = apply_password_hops(input, &config);
     assert_eq!(out, input);
@@ -57,10 +58,10 @@ fn test_apply_password_hops_zero_hops_returns_input_unmodified() {
 
 #[test]
 fn test_generate_password_uses_get_host_and_trims() {
-    let mut config = Config::default();
-    config.hops = 0; // avoid hashing so we can assert exact concatenation result
-    config.length = 50; // long enough to not slice
-    config.strip_subdomain = true;
+    let config = Config::default()
+        .with_hops(0) // avoid hashing so we can assert exact concatenation result
+        .with_length(50)// long enough to not slice
+        .with_strip_subdomain(true);
 
     let url = "https://sub.example.co.uk/path";
     let master = "  master  ";
@@ -70,10 +71,10 @@ fn test_generate_password_uses_get_host_and_trims() {
 
 #[test]
 fn test_generate_password_with_invalid_url_uses_raw_url() {
-    let mut config = Config::default();
-    config.hops = 0;
-    config.length = 100;
-    config.strip_subdomain = true;
+    let config = Config::default()
+        .with_hops(0)
+        .with_length(100)
+        .with_strip_subdomain(true);
 
     let url = "notavalidurl";
     let master = "m";
