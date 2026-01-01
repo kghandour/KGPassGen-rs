@@ -22,11 +22,36 @@ Simply run
 cargo install kg_passgen
 ```
 
+Then you should have access to the password generator. To start it type:
+```shell
+kg_passgen
+```
+
+and follow the prompts.
+
+
 ### Install as a Library
 Simply run
 ```shell
 cargo add kg_passgen
 ```
+
+## Example
+```rust
+use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+use kg_passgen::generator::generate_password;
+let config = Config::KGPG;
+
+let example_password = generate_password("https://example.com", "my_master_password", &config).unwrap();
+assert_eq!(example_password.len(), config.length as usize);
+assert_eq!(example_password, "mXApUt1OgTb$xZh");
+
+let different_password = generate_password("https://test.com", "my_master_password", &config).unwrap();
+assert_eq!(different_password.len(), config.length as usize);
+assert_eq!(different_password, "jtNRe$VWbnE#F6y");
+```
+
+For more information checkout the different modules available through the docs ([Here](https://docs.rs/kg_passgen)).
 
 
 ## Security features:
