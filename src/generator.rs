@@ -1,11 +1,33 @@
+//! The generator module contains the core logic for generating passwords
+//! based on user input and configuration settings. It includes functions
+//! for hashing, applying generator-specific transformations, validating
+//! passwords, and generating the final password.
+//! 
+//! # Examples
+//! ```
+//! use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+//! use kg_passgen::generator::generate_password;
+//! let config = Config::KGPG;
+//! 
+//! let example_password = generate_password("https://example.com", "my_master_password", &config);
+//! assert_eq!(example_password.len(), config.length as usize);
+//! assert_eq!(example_password, "mXApUt1OgTb$xZh");
+//! 
+//! let different_password = generate_password("https://test.com", "my_master_password", &config);
+//! assert_eq!(different_password.len(), config.length as usize);
+//! assert_eq!(different_password, "jtNRe$VWbnE#F6y");
+//! ```
+
 use base64::Engine;
 use crate::config::{Config, HashAlgorithm, GeneratorType};
 
+/// Hashes the input string using MD5 and encodes the result in Base64
 pub fn hash_md5(input: &str) -> String {
     let digest = md5::compute(input.as_bytes());
     base64::prelude::BASE64_STANDARD.encode(digest.0)
 }
 
+/// Hashes the input string using SHA512 and encodes the result in Base64
 pub fn hash_sha512(input: &str) -> String {
     use sha2::{Sha512, Digest};
 
@@ -15,6 +37,30 @@ pub fn hash_sha512(input: &str) -> String {
     base64::prelude::BASE64_STANDARD.encode(result)
 }
 
+/// Validates that the generated password meets the required criteria
+/// KGPG requires at least one special character from the set !#%@$&, 
+/// as well as one uppercase letter, one lowercase letter, and one digit.
+/// It cannot start with an uppercase letter.
+/// Additionally it validates the length of the generated password based on the config.
+/// SGP requires at least one uppercase letter, one lowercase letter, and one digit.
+/// It cannot start with an uppercase letter.
+/// Additionally it validates the length of the generated password based on the config.
+/// # Examples
+/// ```
+/// use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+/// use kg_passgen::generator::validate_password;
+/// let config = Config::KGPG;
+/// assert!(validate_password("bAcdef1!asdfgasd", &config));
+/// assert!(!validate_password("abcAefgasd12asd", &config));
+/// ```
+/// 
+/// ```
+/// use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+/// use kg_passgen::generator::validate_password;
+/// let config = Config::SGP;
+/// assert!(validate_password("bcAdef1123as", &config));
+/// assert!(!validate_password("abcdefgfsadg", &config));
+/// ```
 pub fn validate_password(password: &str, config: &Config) -> bool {
     let sliced_password = match password.get(0..config.length as usize) {
         Some(slice) => slice,
@@ -36,6 +82,7 @@ pub fn validate_password(password: &str, config: &Config) -> bool {
     true
 }
 
+/// Applies KGPG-specific character replacements
 pub fn apply_kgpg (password: &str) -> String {
     let mut kgpg_password = String::new();
     for c in password.chars() {
@@ -52,6 +99,7 @@ pub fn apply_kgpg (password: &str) -> String {
     kgpg_password
 }
 
+/// Applies SGP-specific character replacements
 pub fn apply_sgp (password: &str) -> String {
     let mut sgp_password = String::new();
     for c in password.chars() {
@@ -65,6 +113,8 @@ pub fn apply_sgp (password: &str) -> String {
     sgp_password
 }
 
+/// Applies the password generation logic based on a single concatenated input
+/// For the KGPG and SGP algorithms, it expects a password in the format "master_password:host"
 pub fn apply_password_hops (password: &str, config: &Config) -> String {
     let mut hopped_password = password.to_string();
     let mut iteration = 0;
@@ -94,6 +144,21 @@ pub fn apply_password_hops (password: &str, config: &Config) -> String {
     sliced_password.to_string()
 }
 
+/// Main function for generating a password
+/// # Examples
+/// ```
+/// use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+/// use kg_passgen::generator::generate_password;
+/// let config = Config::KGPG;
+/// 
+/// let example_password = generate_password("https://example.com", "my_master_password", &config);
+/// assert_eq!(example_password.len(), config.length as usize);
+/// assert_eq!(example_password, "mXApUt1OgTb$xZh");
+/// 
+/// let different_password = generate_password("https://test.com", "my_master_password", &config);
+/// assert_eq!(different_password.len(), config.length as usize);
+/// assert_eq!(different_password, "jtNRe$VWbnE#F6y");
+/// ```
 pub fn generate_password(url: &str, master_password: &str, config: &Config) -> String {
     // Placeholder for password generation logic
     let host =  crate::url_helper::get_host(url, &config.strip_subdomain);

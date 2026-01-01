@@ -1,3 +1,37 @@
+//! Configuration module for the password generator application.
+//! Defines the Config struct and related enums for hash algorithms and generator types.
+//! Also includes default configurations for KGPG and SGP.
+//! When using the GeneratorType::KGPG, it adds an extra security layer 
+//! by making sure that it includes symbols in the generated passwords.
+//! 
+//! # Examples
+//! ```
+//! use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+//! let custom_config = Config::default()
+//!     .with_hash_algorithm(HashAlgorithm::SHA512)
+//!     .with_length(20)
+//!     .with_hops(5)
+//!     .with_strip_subdomain(false);
+//! 
+//! assert_eq!(custom_config.hash_algorithm, HashAlgorithm::SHA512);
+//! assert_eq!(custom_config.length, 20);
+//! assert_eq!(custom_config.hops, 5);
+//! assert_eq!(custom_config.strip_subdomain, false);
+//! ```
+//! It is also possible to directly create a config instance:
+//! ```
+//! use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+//! let sgp_config = Config {
+//!    generator_type: GeneratorType::SGP,
+//!   strip_subdomain: true,
+//!   ..Default::default()
+//! };
+//! assert_eq!(sgp_config.generator_type, GeneratorType::SGP);
+//! assert!(sgp_config.strip_subdomain);
+//! assert_eq!(sgp_config.hash_algorithm, HashAlgorithm::MD5);
+//! assert_eq!(sgp_config.length, 15);
+//! assert_eq!(sgp_config.hops, 15);
+//! ```
 #[derive(Debug, PartialEq)]
 pub enum HashAlgorithm {
     MD5,

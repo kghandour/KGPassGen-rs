@@ -1,3 +1,18 @@
+//! Extracts the host from a given URL, with an option to strip subdomains. If an invalid URL is provided, it returns the original string.
+//! # Examples
+//! ```
+//! use kg_passgen::url_helper::get_host;
+//! let url = "https://sub.example.co.uk/path";
+//! let host = get_host(url, &true);
+//! assert_eq!(host, "example.co.uk");
+//! ```
+//! 
+//! ```
+//! use kg_passgen::url_helper::get_host;
+//! let url = "thisisnotavalidurl";
+//! let host = get_host(url, &false);
+//! assert_eq!(host, "thisisnotavalidurl");
+//! ```
 pub fn get_host(url: &str, strip_subdomain: &bool) -> String {
     match url::Url::parse(url) {
         Ok(parsed) => {

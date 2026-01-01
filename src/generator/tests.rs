@@ -103,3 +103,17 @@ fn test_hash_sha512_decodes_to_64_bytes_and_matches_sha512() {
     let expected = hasher.finalize();
     assert_eq!(decoded, expected.as_slice());
 }
+
+#[test]
+fn test_generate_password_produces_different_passwords_for_different_urls() {
+    let config = Config::KGPG;
+
+    let master = "my_master_password";
+
+    let example_password = generate_password("https://example.com", master, &config);
+    let different_password = generate_password("https://test.com", master, &config);
+
+    assert_ne!(example_password, different_password);
+    assert_eq!(example_password, "mXApUt1OgTb$xZh");
+    assert_eq!(different_password, "jtNRe$VWbnE#F6y");
+}
