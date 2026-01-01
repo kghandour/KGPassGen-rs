@@ -7,10 +7,11 @@ For the CLI implementation, by default, the password input is masked from the te
 
 ## Security features:
 1. Generates a reproducible password that is unique to each different service
-2. Generated passwords follows strict validations listed below
-3. Masks the input password by default
-4. Copies the generated password to clipboard by default
-5. Does not show the generated password on the CLI by default
+2. Passwords are hashed multiple times till they satisfy the validation
+3. Generated passwords follows strict validations listed below
+4. Masks the input password by default
+5. Copies the generated password to clipboard by default
+6. Does not show the generated password on the CLI by default
 
 ### KGPG Validations
 1. Generated password must be at least 8 characters
@@ -30,3 +31,6 @@ Run `cargo clippy` to check for linting issues.
 This app uses `arboard` to manage the clipboard ([Here](https://github.com/1Password/arboard)). If there is a problem, it is recommended to use Xwayland instead. If the problem persists or you are facing it in other operating systems, please create an issue. 
 
 An alternative solution is when prompted, you can show the generated password to the terminal.
+
+## License
+Licensed under [MIT license](LICENSE.md).
