@@ -28,14 +28,14 @@
 //! };
 //! assert_eq!(sgp_config.generator_type, GeneratorType::SGP);
 //! assert!(sgp_config.strip_subdomain);
-//! assert_eq!(sgp_config.hash_algorithm, HashAlgorithm::MD5);
+//! assert_eq!(sgp_config.hash_algorithm, HashAlgorithm::SHA512);
 //! assert_eq!(sgp_config.length, 15);
 //! assert_eq!(sgp_config.hops, 15);
 //! ```
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum HashAlgorithm {
-    MD5,
     SHA512,
+    MD5,
 }
 
 #[derive(Debug, PartialEq)]
@@ -58,7 +58,7 @@ impl Default for Config {
         Self {
             generator_type: GeneratorType::KGPG,
             strip_subdomain: true,
-            hash_algorithm: HashAlgorithm::MD5,
+            hash_algorithm: HashAlgorithm::SHA512,
             length: 15,
             hops: 15,
         }
@@ -98,7 +98,7 @@ mod tests {
         let config = Config::default();
         assert_eq!(config.generator_type, GeneratorType::KGPG);
         assert!(config.strip_subdomain);
-        assert_eq!(config.hash_algorithm, HashAlgorithm::MD5);
+        assert_eq!(config.hash_algorithm, HashAlgorithm::SHA512);
         assert_eq!(config.length, 15);
         assert_eq!(config.hops, 15);
     }

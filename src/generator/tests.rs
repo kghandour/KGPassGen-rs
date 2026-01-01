@@ -49,10 +49,10 @@ fn test_validate_password_kgpg_requires_special_char() {
 fn test_apply_password_hops_zero_hops_returns_input_unmodified() {
     let config = Config::default()
         .with_hops(0)
-        .with_length(100); // larger than input so slicing will return None and original returned
+        .with_length(20); // larger than input so slicing will return None and original returned
 
     let input = "short";
-    let out = apply_password_hops(input, &config);
+    let out = apply_password_hops(input, &config).unwrap();
     assert_eq!(out, input);
 }
 
@@ -65,7 +65,7 @@ fn test_generate_password_uses_get_host_and_trims() {
 
     let url = "https://sub.example.co.uk/path";
     let master = "  master  ";
-    let pw = generate_password(url, master, &config);
+    let pw = generate_password(url, master, &config).unwrap();
     assert_eq!(pw, "master:example.co.uk");
 }
 
@@ -73,12 +73,12 @@ fn test_generate_password_uses_get_host_and_trims() {
 fn test_generate_password_with_invalid_url_uses_raw_url() {
     let config = Config::default()
         .with_hops(0)
-        .with_length(100)
+        .with_length(80)
         .with_strip_subdomain(true);
 
     let url = "notavalidurl";
     let master = "m";
-    let pw = generate_password(url, master, &config);
+    let pw = generate_password(url, master, &config).unwrap();
     assert_eq!(pw, "m:notavalidurl");
 }
 
@@ -110,10 +110,33 @@ fn test_generate_password_produces_different_passwords_for_different_urls() {
 
     let master = "my_master_password";
 
-    let example_password = generate_password("https://example.com", master, &config);
-    let different_password = generate_password("https://test.com", master, &config);
+    let example_password = generate_password("https://example.com", master, &config).unwrap();
+    let different_password = generate_password("https://test.com", master, &config).unwrap();
 
     assert_ne!(example_password, different_password);
     assert_eq!(example_password, "mXApUt1OgTb$xZh");
     assert_eq!(different_password, "jtNRe$VWbnE#F6y");
+}
+#[test]
+fn test_raises_an_error_for_invalid_length_md5() {
+    let config = Config::default()
+        .with_hash_algorithm(HashAlgorithm::MD5)
+        .with_length(30) // invalid length for MD5
+        .with_hops(1);
+
+    let result = generate_password("https://example.com", "master", &config);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(InvalidLengthError)));
+}
+
+#[test]
+fn test_raises_an_error_for_invalid_length_sha512() {
+    let config = Config::default()
+        .with_hash_algorithm(HashAlgorithm::SHA512)
+        .with_length(100) // invalid length for SHA512
+        .with_hops(1);
+
+    let result = generate_password("https://example.com", "master", &config);
+    assert!(result.is_err());
+    assert!(matches!(result, Err(InvalidLengthError)));
 }

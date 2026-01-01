@@ -2,6 +2,11 @@
 name = "kg_passgen"
 version = "0.1.0"
 edition = "2024"
+description = "Password generator that hashes an input master password and a service url"
+repository = "https://github.com/kghandour/KGPassGen-rs"
+license = "MIT"
+readme = "README.md"
+keywords = ["password-generation", "password"]
 
 [dependencies]
 arboard = "3.6.1"

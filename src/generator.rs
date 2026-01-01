@@ -9,17 +9,44 @@
 //! use kg_passgen::generator::generate_password;
 //! let config = Config::KGPG;
 //! 
-//! let example_password = generate_password("https://example.com", "my_master_password", &config);
+//! let example_password = generate_password("https://example.com", "my_master_password", &config).unwrap();
 //! assert_eq!(example_password.len(), config.length as usize);
 //! assert_eq!(example_password, "mXApUt1OgTb$xZh");
 //! 
-//! let different_password = generate_password("https://test.com", "my_master_password", &config);
+//! let different_password = generate_password("https://test.com", "my_master_password", &config).unwrap();
 //! assert_eq!(different_password.len(), config.length as usize);
 //! assert_eq!(different_password, "jtNRe$VWbnE#F6y");
 //! ```
 
+//! Returns an error if the length in the config is invalid for the selected hash algorithm
+//! ```
+//! use kg_passgen::config::{Config, HashAlgorithm, GeneratorType};
+//! use kg_passgen::generator::generate_password;
+//! let config = Config::default()
+//!     .with_hash_algorithm(HashAlgorithm::MD5)
+//!    .with_length(30) // invalid length for MD5
+//!   .with_hops(1);
+//! 
+//! let result = generate_password("https://example.com", "master", &config);
+//! assert!(result.is_err());
+//! assert!(matches!(result, Err(InvalidLengthError)));
+//! ```
+
+use core::fmt;
+
 use base64::Engine;
 use crate::config::{Config, HashAlgorithm, GeneratorType};
+
+/// Custom error type for invalid length configurations
+#[derive(Debug, Clone)]
+pub struct InvalidLengthError;
+
+impl fmt::Display for InvalidLengthError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Invalid length for the selected hash algorithm")
+    }
+}
+
 
 /// Hashes the input string using MD5 and encodes the result in Base64
 pub fn hash_md5(input: &str) -> String {
@@ -115,9 +142,14 @@ pub fn apply_sgp (password: &str) -> String {
 
 /// Applies the password generation logic based on a single concatenated input
 /// For the KGPG and SGP algorithms, it expects a password in the format "master_password:host"
-pub fn apply_password_hops (password: &str, config: &Config) -> String {
+pub fn apply_password_hops (password: &str, config: &Config) -> Result<String, InvalidLengthError> {
     let mut hopped_password = password.to_string();
     let mut iteration = 0;
+    let md5_length_invalid = config.hash_algorithm == HashAlgorithm::MD5 && (config.length < 8 || config.length > 24);
+    let sha512_length_invalid = config.hash_algorithm == HashAlgorithm::SHA512 && (config.length < 8 || config.length > 84);
+    if md5_length_invalid || sha512_length_invalid {
+        return Err(InvalidLengthError);
+    }
     while iteration < config.hops {
         hopped_password = match config.hash_algorithm {
             HashAlgorithm::MD5 => hash_md5(&hopped_password),
@@ -138,10 +170,10 @@ pub fn apply_password_hops (password: &str, config: &Config) -> String {
 
     let sliced_password = match hopped_password.get(0..config.length as usize) {
         Some(slice) => slice,
-        None => return hopped_password,
+        None => return Ok(hopped_password),
     };
 
-    sliced_password.to_string()
+    Ok(sliced_password.to_string())
 }
 
 /// Main function for generating a password
@@ -151,15 +183,15 @@ pub fn apply_password_hops (password: &str, config: &Config) -> String {
 /// use kg_passgen::generator::generate_password;
 /// let config = Config::KGPG;
 /// 
-/// let example_password = generate_password("https://example.com", "my_master_password", &config);
+/// let example_password = generate_password("https://example.com", "my_master_password", &config).unwrap();
 /// assert_eq!(example_password.len(), config.length as usize);
 /// assert_eq!(example_password, "mXApUt1OgTb$xZh");
 /// 
-/// let different_password = generate_password("https://test.com", "my_master_password", &config);
+/// let different_password = generate_password("https://test.com", "my_master_password", &config).unwrap();
 /// assert_eq!(different_password.len(), config.length as usize);
 /// assert_eq!(different_password, "jtNRe$VWbnE#F6y");
 /// ```
-pub fn generate_password(url: &str, master_password: &str, config: &Config) -> String {
+pub fn generate_password(url: &str, master_password: &str, config: &Config) -> Result<String, InvalidLengthError> {
     // Placeholder for password generation logic
     let host =  crate::url_helper::get_host(url, &config.strip_subdomain);
 
