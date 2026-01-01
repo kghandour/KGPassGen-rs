@@ -1,6 +1,9 @@
 # Credit for Workflow: Tauri https://github.com/tauri-apps/tauri/blob/dev/.github/workflows/audit.yml
 
 name: Audit
+permissions:
+  contents: read
+  pull-requests: write
 
 on:
   workflow_dispatch:

@@ -1,6 +1,9 @@
 # Credit for Workflow: Tauri: https://github.com/tauri-apps/tauri/blob/dev/.github/workflows/lint-rust.yml
 
 name: lint rust
+permissions:
+  contents: read
+  pull-requests: write
 
 on: push
 env:
